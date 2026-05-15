@@ -108,7 +108,7 @@ Flow:
 
 While the app is single-user, the Entra App Registration is restricted to one tenant and one user object ID via a server-side allowlist (`AUTH_ALLOWED_USER_IDS` env var). Removing this allowlist is the one change required to open the app to multi-user.
 
-Why Entra: it's the dominant enterprise identity provider, the OIDC implementation is standard, and the credentials transfer cleanly to any future job in a Microsoft-shop environment. [`adr/0002-entra-id-for-auth.md`](adr/0002-entra-id-for-auth.md) records the full reasoning.
+Why Entra: it's the dominant enterprise identity provider, the OIDC implementation is standard, and the credentials transfer cleanly to any future job in a Microsoft-shop environment.
 
 ## 6. Storage layout
 
@@ -140,7 +140,7 @@ Switching hosts requires: updating env vars in the new provider, pointing DNS at
 
 ## 9. What's deliberately not here
 
-A few decisions worth recording as *not yet*:
+A few decisions worth recording as _not yet_:
 
 - **No microservices.** A monolith is correct at this size. Splitting it would be premature.
 - **No GraphQL.** Server Actions and a small REST surface cover the access patterns.
@@ -155,6 +155,5 @@ The `adr/` directory holds Architecture Decision Records — short markdown file
 Current ADRs:
 
 - [0001 — Ports and adapters architecture](adr/0001-ports-and-adapters.md)
-- [0002 — Microsoft Entra ID for authentication](adr/0002-entra-id-for-auth.md)
 
-Add a new ADR whenever a decision is non-obvious, expensive to reverse, or one a future maintainer (or a future you) might second-guess.
+Add a new ADR whenever a decision is non-obvious, expensive to reverse or one a future maintainer (or a future you) might second-guess.
