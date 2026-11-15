@@ -12,6 +12,8 @@ If you are a human reader: this is fine to skim, but the design rationale lives 
 
 The README is the human entry point; this file is yours.
 
+**Current implementation:** domain types and rules, repository ports, in-memory and Drizzle adapters, a generated migration, and Vitest contract tests running on PGlite. UI, auth, OCR and Biome are not built yet.
+
 ## 2. Hard rules
 
 These cannot be relaxed without an explicit decision recorded as an ADR:
@@ -93,6 +95,8 @@ pnpm test:e2e
 
 Never commit if `pnpm typecheck` fails.
 
+`pnpm lint` and `pnpm test:e2e` are not wired up yet; use `pnpm typecheck` and `pnpm test` today.
+
 ## 6. Things agents commonly get wrong here
 
 - **Bypassing the ports layer.** Tempting to `import { db } from '~/adapters/db/drizzle'` directly in a route. Don't. Go through the repository interface in `src/ports/`.
@@ -100,7 +104,7 @@ Never commit if `pnpm typecheck` fails.
 - **Adding a `console.log` "just for now".** Use the logger.
 - **Treating OCR output as truth.** Extracted jumps are always `JumpDraft`, never `Jump`. They become `Jump` only after the human review screen commits them.
 - **Hard-coding tag IDs.** Tags are user-editable. Read by name or by canonical key, never by numeric ID in code.
-- **Writing tests that hit the network.** Use the test doubles in `src/adapters/*/test-double.ts`.
+- **Writing tests that hit the network.** Use the in-memory adapters in `src/adapters/memory/`, or PGlite for the Drizzle contract tests. Never connect to Neon.
 
 ## 7. When to ask, when to act
 

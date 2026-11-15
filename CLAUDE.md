@@ -9,7 +9,7 @@ Guidance for Claude (Anthropic) when working in this repository, whether via Cla
 ## How the maintainer prefers to work with Claude
 
 - **Plan before you act.** For any task larger than a one-line fix, propose a brief plan (numbered steps, files you intend to touch) and wait for confirmation. In Antigravity, prefer Plan mode over Fast mode for anything touching `src/domain/`, `src/ports/`, or the database schema.
-- **Small, reviewable diffs.** Prefer multiple small commits over one large one. Each commit should pass `pnpm typecheck && pnpm lint && pnpm test`.
+- **Small, reviewable diffs.** Prefer multiple small commits over one large one. Each commit should pass `pnpm typecheck && pnpm test` (and `pnpm lint` once Biome is wired up).
 - **Show your work.** When you make a non-obvious choice, leave a short comment explaining why — not what — at the top of the change.
 - **Honest uncertainty.** If you don't know how something in this codebase works, say so and read the relevant file. Don't guess at conventions.
 
@@ -17,6 +17,7 @@ Guidance for Claude (Anthropic) when working in this repository, whether via Cla
 
 - **The `domain` layer is allergic to frameworks.** It's tempting to `import { z } from 'zod'` in there because validation feels domain-ish. Don't — domain types are hand-written. Zod schemas live in adapter or app boundaries where input crosses into the system.
 - **`Jump` vs `JumpDraft`.** A `Jump` is a committed, validated, persisted record. A `JumpDraft` is OCR output or user form state — partial, possibly invalid. They are distinct types in `src/domain/jump.ts`. Conflating them is the single most common bug.
+- **Repository tests are in-process.** The Drizzle adapters are tested against PGlite (`src/test-support/pglite.ts`); never point tests at Neon. The shared contracts in `src/test-support/repository-contracts.ts` must pass for both the in-memory and Drizzle adapters.
 - **British Skydiving terminology is canonical.** Use the spellings `freefall` (one word), `canopy`, `discipline`, `hop & pop`, `BS A licence` (not "license"). The progression module uses BS terms; do not Americanise.
 - **Tags are user-editable, but a seed set exists.** When testing, do not assume the seed IDs are stable — query by `canonicalKey` (e.g. `'aff-1'`, `'fs-1'`, `'fun-jump'`).
 - **The OCR review screen is the trust boundary.** No code path writes a `Jump` to the DB without it having passed through the review screen (or an authenticated server action that explicitly bypasses for manual entry).
