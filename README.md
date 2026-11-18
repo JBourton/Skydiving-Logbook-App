@@ -112,6 +112,22 @@ Open <http://localhost:3000>. Sign in with your Entra ID account.
 | `pnpm db:migrate`  | Apply pending migrations                         |
 | `pnpm db:studio`   | Open Drizzle Studio (DB inspector)               |
 
+## Architecture diagrams
+
+Two diagrams summarise the system design. Both live in [`docs/architecture_diagrams/`](docs/architecture_diagrams/).
+
+### System architecture
+
+![System architecture diagram](docs/architecture_diagrams/skydive_log_system_architecture.svg)
+
+Shows the overall system: Next.js app, ports/adapters, external services (Neon/PostgreSQL, Cloudflare R2, Gemini OCR, Microsoft Entra ID), and data flow from a scanned logbook page through extraction, review, and committed storage.
+
+### Ports and adapters
+
+![Ports and adapters diagram](docs/architecture_diagrams/skydive_log_ports_and_adapters.svg)
+
+Shows the hexagonal layout: domain core surrounded by port interfaces, with concrete adapters (Drizzle, R2, Gemini, Entra) plugged in at the edges. Illustrates the dependency direction — adapters depend on ports, never the reverse.
+
 ## Project structure
 
 ```
