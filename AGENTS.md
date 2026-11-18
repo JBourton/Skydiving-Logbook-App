@@ -12,7 +12,7 @@ If you are a human reader: this is fine to skim, but the design rationale lives 
 
 The README is the human entry point; this file is yours.
 
-**Current implementation:** domain types and rules, repository ports, in-memory and Drizzle adapters, a generated migration, and Vitest contract tests running on PGlite. UI, auth, OCR and Biome are not built yet.
+**Current implementation:** domain types and rules (including BS progression, currency and logbook stats), repository ports, in-memory and Drizzle adapters, a generated migration, Vitest contract tests on PGlite, and the Next.js 16 frontend. Run it on sample data with `DATA_SOURCE=demo` in `.env.local`. Auth, OCR, storage and Biome are not built yet.
 
 ## 2. Hard rules
 
@@ -67,7 +67,7 @@ app/components  →  ports  →  domain
 Even though only one user signs in today, write every query, route, and storage path as if there were a million users. Examples:
 
 - DB: `SELECT * FROM jumps WHERE user_id = $1 AND id = $2` — never just `WHERE id = $2`.
-- Storage: object keys are `users/{userId}/logbook/{jumpId}/{photo}` — never globally addressed.
+- Storage: object keys are `users/{userId}/logbook-pages/{uploadId}.jpg` or `users/{userId}/jumps/{jumpId}/{photoId}.jpg` (see ARCHITECTURE §6) — never globally addressed.
 - Caches: keyed by `userId` if they hold user data.
 
 ## 5. Commands you should run
@@ -100,10 +100,12 @@ Never commit if `pnpm typecheck` fails.
 ## 6. Things agents commonly get wrong here
 
 - **Bypassing the ports layer.** Tempting to `import { db } from '~/adapters/db/drizzle'` directly in a route. Don't. Go through the repository interface in `src/ports/`.
-- **Forgetting `userId` on a new query.** Every new query method needs it. There is a Biome lint rule that flags repository methods missing it; do not disable it.
+- **Forgetting `userId` on a new query.** Every new query method needs it. A Biome rule to flag missing `userId` is planned; until it exists, check this in review.
 - **Adding a `console.log` "just for now".** Use the logger.
 - **Treating OCR output as truth.** Extracted jumps are always `JumpDraft`, never `Jump`. They become `Jump` only after the human review screen commits them.
 - **Hard-coding tag IDs.** Tags are user-editable. Read by name or by canonical key, never by numeric ID in code.
+- **Reading unbuilt features from anywhere but `getPreviewOnlyData()`.** Tags, gear, partners, weather and OCR drafts have no ports yet. Their sample data comes through that one function so it can be deleted field by field as each port lands.
+- **Using viewport breakpoints for components that live in columns.** Components like `JumpList` respond to their container (`@container` with `@4xl:` variants) so they work in a sidebar and full width alike.
 - **Writing tests that hit the network.** Use the in-memory adapters in `src/adapters/memory/`, or PGlite for the Drizzle contract tests. Never connect to Neon.
 
 ## 7. When to ask, when to act

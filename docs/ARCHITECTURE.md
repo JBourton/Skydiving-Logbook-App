@@ -33,8 +33,10 @@ The codebase is organised in four concentric layers, with imports allowed only i
 
 - **`domain/`** holds entities (`Jump`, `Tag`, `Equipment`, `DropZone`), value objects (`Altitude`, `FreefallDuration`), and pure functions encoding rules (currency calculation, British Skydiving progression requirements). It imports from nothing except itself and the standard library.
 - **`ports/`** holds TypeScript interfaces describing what the domain and app need from the outside world: an `OcrProvider`, a `JumpRepository`, an `AuthProvider`, a `StorageProvider`, a `NotificationProvider`.
-- **`adapters/`** holds concrete implementations of those interfaces. There is typically one production adapter per port (`adapters/ocr/gemini.ts`, `adapters/db/drizzle-postgres.ts`) and one test double (`adapters/ocr/in-memory.ts`).
+- **`adapters/`** holds concrete implementations of those interfaces. There is typically one production adapter per port (for example `adapters/db/drizzle-jump-repository.ts`) and one in-memory adapter (`adapters/memory/jump-repository.ts`) that the tests and demo mode share.
 - **`app/`** and **`components/`** are the Next.js routes and React UI. They consume `ports/` via a composition root and never import from `adapters/` directly.
+
+Two seams in `src/lib/` keep the edges honest. `services.ts` is the composition root: `DATA_SOURCE=demo` makes it hand out the in-memory adapters seeded with a sample logbook, so the whole UI runs with no database. `current-user.ts` is the only place a page gets a `userId`, so sign-in replaces one function. Features whose ports don't exist yet (tags, gear, partners, weather, OCR drafts) read from `getPreviewOnlyData()`, which returns sample data in demo mode and empty values otherwise; each field is deleted as its port lands.
 
 This is the ports-and-adapters (a.k.a. hexagonal) pattern. It is the single most important architectural decision in this repo. See [`adr/0001-ports-and-adapters.md`](adr/0001-ports-and-adapters.md).
 
@@ -58,7 +60,7 @@ The relational schema centres on `jumps`, which sits at the heart of a small sta
 
 Notable design choices:
 
-- **Every user-owned row has `user_id`.** No exceptions. This is enforced by a Biome rule on the schema files and by a runtime assertion in the base repository.
+- **Every user-owned row has `user_id`.** No exceptions. Today this is enforced by convention, review and the shared repository contract tests; a lint rule is planned once Biome is set up.
 - **`jumps` is append-mostly.** Edits are allowed (handwritten logbooks have errors too), but every jump has `created_at`, `updated_at`, and a soft-delete `archived_at`. Hard deletes are admin-only and out of scope.
 - **`tags` are user-owned.** A canonical seed set is inserted on first login per user, but users can rename, delete, and add freely. Code never references tags by numeric ID; always by `canonical_key` (e.g. `aff-1`, `fs-1`).
 - **`jump_partners` references other users by `user_id` if they exist on the platform, otherwise stores a free-text name.** This is how the multi-user-ready model handles the "I jumped with a friend who isn't on the app" case.
@@ -89,14 +91,14 @@ OCR is the most novel part of the application. The pipeline runs in three stages
 Three constraints:
 
 1. The `OcrProvider` interface returns `JumpDraft[]`. Drafts are partial and possibly invalid — they have nullable fields and free-text discipline/tag suggestions.
-2. The review screen is the trust boundary. No code path commits a `Jump` without it (or an explicit manual-entry server action). This is enforced by type discipline: `JumpRepository.bulkInsert` accepts `Jump`, not `JumpDraft`.
+2. The review screen is the trust boundary. No code path commits a `Jump` without it (or an explicit manual-entry server action). This is enforced by type discipline: the repository accepts `NewJump`, never `JumpDraft`, and both manual entry and the review screen go through the same Zod schema in `src/lib/jump-form.ts`.
 3. The original photo is always retained alongside the committed jumps. The user can re-OCR a page later with a better model and reconcile differences.
 
 Swap path: a `claude.ts` or `azure-doc-ai.ts` adapter implementing `OcrProvider` is the only addition needed to change providers. Env var `OCR_PROVIDER` selects the active one.
 
 ## 5. Authentication
 
-Auth is handled by [Auth.js](https://authjs.dev) with the Microsoft Entra ID provider, against an App Registration in the maintainer's personal Azure tenant.
+Auth will use the Microsoft Entra ID provider, against an App Registration in the maintainer's personal Azure tenant. The library is still to be confirmed in ADR 0002: [Auth.js](https://authjs.dev) is now maintained by the Better Auth team, who recommend Better Auth for new projects, and NextAuth v5 is still in beta. Until then, `src/lib/current-user.ts` uses `DEV_USER_ID` in development only.
 
 Flow:
 
@@ -123,13 +125,13 @@ All paths are user-scoped. Signed URLs are generated server-side with short TTLs
 
 ## 7. Observability
 
-- **Logging.** All server-side logging goes through `src/lib/log.ts`, which wraps Pino. Logs are JSON-structured with request ID, user ID (when available), and a level. `console.log` is banned by lint rule.
+- **Logging.** All server-side logging goes through `src/lib/log.ts`, which wraps Pino. Logs are JSON-structured with request ID, user ID (when available), and a level. `console.log` is banned by convention (see `AGENTS.md`); a lint rule arrives with Biome.
 - **Error tracking.** Sentry captures unhandled errors on both server and client. Source maps are uploaded on each deploy.
 - **Metrics.** Postponed to v2. The free tier of Better Stack or Axiom will be the target.
 
 ## 8. Deployment
 
-The default path is Vercel. The CI workflow in `.github/workflows/` builds, typechecks, lints, tests, and (on `main`) deploys. Database migrations run as a separate, manually triggered workflow against the production DB — never automatically on deploy.
+The default path is Vercel. The planned CI workflow in `.github/workflows/` will build, typecheck, lint, test, and (on `main`) deploy; it doesn't exist yet. Database migrations run as a separate, manually triggered workflow against the production DB — never automatically on deploy.
 
 Two alternative deployments are kept current in case the primary host needs to change:
 
