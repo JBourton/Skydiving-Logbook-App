@@ -2,7 +2,7 @@
 
 An interactive digital skydiving logbook. Scan handwritten logbook pages, review extracted data, save securely and explore your jumping history through a dashboard built for skydivers.
 
-> **Status:** early development. Single-user by default; designed for multi-user from day one.
+> **Status:** early development. The repository layer is in place (domain, ports, in-memory and Drizzle adapters, migrations, PGlite contract tests). UI, auth and OCR are still to come. Single-user by default; designed for multi-user from day one.
 
 ---
 
@@ -20,7 +20,10 @@ This is also a portfolio project: the auth, observability, and infrastructure ch
 
 ### Implemented
 
-- _(none yet — initial scaffold in progress)_
+- Jump and drop-zone domain types and rules (duplicate jump numbers, completeness checks, deploy-altitude warning)
+- Repository ports with in-memory and Drizzle (Neon/PostgreSQL) adapters
+- Drizzle schema, generated migration and shared repository contract tests run against both adapters (in-memory + PGlite)
+- Unit tests for domain rules
 
 ### Planned for v1
 
