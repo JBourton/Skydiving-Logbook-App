@@ -21,7 +21,7 @@ This is also a portfolio project: the auth, observability, and infrastructure ch
 ### Working now
 
 - Manual jump entry, with drop zone, aircraft, heights and canopy carried over from the previous jump, one-tap exit altitudes, a delay estimate and live deploy-altitude warnings
-- Logbook with search and filters (text, drop zone, tag, date range), a page per jump, and archiving (soft delete)
+- Logbook with search and filters (text, drop zone, tag, date range), a page per jump, editing, and archiving (soft delete)
 - Today dashboard: currency, recent jumps, a 12-month activity heatmap, rolling 30/90/365-day totals, personal bests and "on this day"
 - British Skydiving progression: the A to D licence route, prerequisites for JM1, CT1, CT2, CT3, FS1, FF1, CF1 and TR1, and sign-off checklists for the next licence
 - Stats: totals, freefall time and distance, a cumulative jumps chart, breakdowns by drop zone, aircraft and canopy size, all filterable by date range
@@ -42,7 +42,6 @@ These screens are built and show sample data in demo mode. With real data they s
 | OCR import: photo, drafts, review, save | `OcrProvider` and `StorageProvider` ports, plus a table for uploaded pages (`jumps.ocr_source_id` has nothing to point at yet) |
 | Jump-partner graph (beta) | partners on the jump repository, or a new port |
 | Weather on jump days (beta) | a weather port |
-| Editing a jump | `JumpRepository.update` |
 
 ### Planned
 

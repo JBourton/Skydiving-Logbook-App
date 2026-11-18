@@ -14,6 +14,13 @@ export interface JumpRepository {
   listByUser(userId: string): Promise<Jump[]>
 
   /**
+   * Replaces a jump's details. Returns the updated jump, or null when no active jump belongs to
+   * `userId` under `id`. Throws DuplicateJumpNumberError if the new jumpNumber is already taken.
+   * `ocrSourceId` is provenance, so an update never changes it.
+   */
+  update(userId: string, id: string, changes: NewJump): Promise<Jump | null>
+
+  /**
    * Soft-deletes a jump. Returns the archived jump, or null when no jump
    * belongs to `userId` under `id`.
    */

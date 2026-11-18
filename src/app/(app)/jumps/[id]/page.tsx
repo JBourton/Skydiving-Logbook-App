@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { archiveJumpAction } from '~/app/(app)/jumps/actions'
 import { AltitudeTape } from '~/components/JumpProfile'
-import { Readout, Section, TagChips, TextLink } from '~/components/Primitives'
+import { ButtonLink, Readout, Section, TagChips, TextLink } from '~/components/Primitives'
 import { deployAltitudeWarning } from '~/domain/deploy-altitude'
 import { missingFields } from '~/domain/jump-completeness'
 import { formatDuration, formatFeet, formatLongDate } from '~/lib/format'
@@ -41,12 +41,17 @@ export default async function JumpPage({ params }: JumpPageProps) {
       <div className="pt-8 md:pt-12">
         <TextLink href="/jumps">Logbook</TextLink>
       </div>
-      <header className="mt-6">
-        <h1 className="text-display">Jump {jump.jumpNumber}</h1>
-        <p className="mt-3 text-title text-ink-soft">
-          {formatLongDate(jump.date)}
-          {dropZone ? ` at ${dropZone.name}, ${dropZone.country}` : ''}
-        </p>
+      <header className="mt-6 flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <h1 className="text-display">Jump {jump.jumpNumber}</h1>
+          <p className="mt-3 text-title text-ink-soft">
+            {formatLongDate(jump.date)}
+            {dropZone ? ` at ${dropZone.name}, ${dropZone.country}` : ''}
+          </p>
+        </div>
+        <ButtonLink href={`/jumps/${jump.id}/edit`} variant="quiet">
+          Edit jump
+        </ButtonLink>
       </header>
 
       {deployWarning ? <p className="mt-8 max-w-[44rem] rounded-control bg-warn-soft px-5 py-4 font-bold text-warn">{deployWarning}</p> : null}
@@ -65,7 +70,9 @@ export default async function JumpPage({ params }: JumpPageProps) {
             ]}
           />
           {missing.length > 0 ? (
-            <p className="mt-6 text-meta font-bold text-caution">Not recorded: {missing.map((field) => missingFieldNames[field]).join(', ')}.</p>
+            <p className="mt-6 text-meta font-bold text-caution">
+              Not recorded: {missing.map((field) => missingFieldNames[field]).join(', ')}. <TextLink href={`/jumps/${jump.id}/edit`}>Fill them in</TextLink>
+            </p>
           ) : null}
 
           {jump.description ? (

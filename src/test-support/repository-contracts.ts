@@ -165,6 +165,32 @@ export function runJumpRepositoryContract(
         ),
       ).toBeNull()
     })
+
+    it('updates a jump in place, keeping its id', async () => {
+      const userId = await harness.createUser()
+      const created = await harness.repository.create(userId, { jumpNumber: 7, date: '2026-05-02', exitAltitudeFt: 13000 })
+
+      const updated = await harness.repository.update(userId, created.id, { jumpNumber: 7, date: '2026-05-03', exitAltitudeFt: 15000, deployAltitudeFt: 3500 })
+
+      expect(updated).toMatchObject({ id: created.id, date: '2026-05-03', exitAltitudeFt: 15000, deployAltitudeFt: 3500 })
+      expect((await harness.repository.findById(userId, created.id))?.exitAltitudeFt).toBe(15000)
+    })
+
+    it("returns null when updating someone else's jump", async () => {
+      const ownerId = await harness.createUser()
+      const otherUserId = await harness.createUser()
+      const created = await harness.repository.create(ownerId, { jumpNumber: 1, date: '2026-05-01' })
+
+      expect(await harness.repository.update(otherUserId, created.id, { jumpNumber: 1, date: '2026-05-01' })).toBeNull()
+    })
+
+    it("rejects an update that takes another jump's number", async () => {
+      const userId = await harness.createUser()
+      await harness.repository.create(userId, { jumpNumber: 1, date: '2026-05-01' })
+      const second = await harness.repository.create(userId, { jumpNumber: 2, date: '2026-05-01' })
+
+      await expect(harness.repository.update(userId, second.id, { jumpNumber: 1, date: '2026-05-01' })).rejects.toBeInstanceOf(DuplicateJumpNumberError)
+    })
   })
 }
 

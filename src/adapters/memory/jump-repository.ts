@@ -62,6 +62,38 @@ export class InMemoryJumpRepository implements JumpRepository {
       .map((jump) => ({ ...jump }))
   }
 
+  async update(userId: string, id: string, changes: NewJump): Promise<Jump | null> {
+    const index = this.jumps.findIndex(
+      (jump) => jump.userId === userId && jump.id === id && jump.archivedAt === null,
+    )
+    const existing = this.jumps[index]
+    if (!existing) return null
+
+    const numberTaken = this.jumps.some(
+      (jump) => jump.userId === userId && jump.id !== id && jump.jumpNumber === changes.jumpNumber,
+    )
+    if (numberTaken) {
+      throw new DuplicateJumpNumberError(userId, changes.jumpNumber)
+    }
+
+    const updated: Jump = {
+      ...existing,
+      jumpNumber: changes.jumpNumber,
+      date: changes.date,
+      dropZoneId: changes.dropZoneId ?? null,
+      aircraft: changes.aircraft ?? null,
+      exitAltitudeFt: changes.exitAltitudeFt ?? null,
+      deployAltitudeFt: changes.deployAltitudeFt ?? null,
+      delaySeconds: changes.delaySeconds ?? null,
+      canopySizeFt2: changes.canopySizeFt2 ?? null,
+      description: changes.description ?? null,
+      authoriser: changes.authoriser ?? null,
+      updatedAt: new Date(),
+    }
+    this.jumps[index] = updated
+    return { ...updated }
+  }
+
   async archive(userId: string, id: string): Promise<Jump | null> {
     const index = this.jumps.findIndex(
       (jump) => jump.userId === userId && jump.id === id,

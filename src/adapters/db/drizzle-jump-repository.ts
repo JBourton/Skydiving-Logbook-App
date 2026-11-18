@@ -119,6 +119,41 @@ export class DrizzleJumpRepository implements JumpRepository {
     return rows.map(toJump)
   }
 
+  async update(userId: string, id: string, changes: NewJump): Promise<Jump | null> {
+    try {
+      const [row] = await this.db
+        .update(jumps)
+        .set({
+          jumpNumber: changes.jumpNumber,
+          date: changes.date,
+          dropZoneId: changes.dropZoneId ?? null,
+          aircraft: changes.aircraft ?? null,
+          exitAltitudeFt: changes.exitAltitudeFt ?? null,
+          deployAltitudeFt: changes.deployAltitudeFt ?? null,
+          delaySeconds: changes.delaySeconds ?? null,
+          canopySizeFt2: changes.canopySizeFt2 ?? null,
+          description: changes.description ?? null,
+          authoriser: changes.authoriser ?? null,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(jumps.userId, userId),
+            eq(jumps.id, id),
+            isNull(jumps.archivedAt),
+          ),
+        )
+        .returning()
+
+      return row ? toJump(row) : null
+    } catch (error) {
+      if (isDuplicateJumpNumberError(error)) {
+        throw new DuplicateJumpNumberError(userId, changes.jumpNumber)
+      }
+      throw error
+    }
+  }
+
   async archive(userId: string, id: string): Promise<Jump | null> {
     const now = new Date()
     const [archived] = await this.db

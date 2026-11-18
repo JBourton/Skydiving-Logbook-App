@@ -37,6 +37,28 @@ export async function createJumpAction(_previousState: JumpFormState, formData: 
   redirect(`/jumps?saved=${parsed.newJump.jumpNumber}`)
 }
 
+export async function updateJumpAction(jumpId: string, _previousState: JumpFormState, formData: FormData): Promise<JumpFormState> {
+  const userId = await getCurrentUserId()
+  const parsed = parseJumpForm(Object.fromEntries(formData))
+  if ('state' in parsed) return parsed.state
+
+  const dropZoneError = await unknownDropZoneError(parsed.newJump.dropZoneId)
+  if (dropZoneError) return { formError: null, fieldErrors: { dropZoneId: dropZoneError } }
+
+  try {
+    const updated = await getServices().jumpRepository.update(userId, jumpId, parsed.newJump)
+    if (!updated) return { formError: 'That jump has been archived, so it can no longer be edited.', fieldErrors: {} }
+  } catch (updateJumpError) {
+    if (updateJumpError instanceof DuplicateJumpNumberError) {
+      return { formError: null, fieldErrors: { jumpNumber: `Jump ${parsed.newJump.jumpNumber} is already in your logbook` } }
+    }
+    throw updateJumpError
+  }
+
+  revalidatePath('/', 'layout')
+  redirect(`/jumps/${jumpId}`)
+}
+
 export async function archiveJumpAction(jumpId: string): Promise<void> {
   const userId = await getCurrentUserId()
   await getServices().jumpRepository.archive(userId, jumpId)
