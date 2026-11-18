@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+/* the root layout sets data-theme on <html> from a cookie & defaults to light, because this is
+   read outdoors far more than indoors. Dark is there for the drive home. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ─── palette ───────────────────────────────────────────────────────────────
+   paper & ink:  every piece of text that matters clears 7:1 (WCAG AAA), so it survives glare
+   route:        glass-cockpit magenta, the colour avionics use for "the route you're flying".
+                 Reserved for progress towards your next licence & for keyboard focus
+   warn:         altimeter red, for safety only (low deploys, lapsed currency)               */
+:root {
+  --paper: #ffffff;
+  --haze: #edf1f5;
+  --haze-strong: #dce3eb;
+  --ink: #14213d;
+  --ink-soft: #46516b;
+  --ink-faint: #67718a;
+  --line: #c6cfda;
+  --route: #9c1a8b;
+  --route-soft: #f6e8f4;
+  --warn: #bf1730;
+  --warn-soft: #fbeaec;
+  --caution: #845200;
+  --caution-soft: #fcf1dd;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --paper: #0b1424;
+  --haze: #15213a;
+  --haze-strong: #1e2c48;
+  --ink: #e9eef6;
+  --ink-soft: #aab5c8;
+  --ink-faint: #8b96ab;
+  --line: #2c3b58;
+  --route: #f191e3;
+  --route-soft: #2d1b36;
+  --warn: #ff7487;
+  --warn-soft: #3a1721;
+  --caution: #f0b65e;
+  --caution-soft: #33270f;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-paper: var(--paper);
+  --color-haze: var(--haze);
+  --color-haze-strong: var(--haze-strong);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-route: var(--route);
+  --color-route-soft: var(--route-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-caution: var(--caution);
+  --color-caution-soft: var(--caution-soft);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --font-sans: var(--font-b612), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* one family (B612, drawn by Airbus for cockpit screens), 2 weights, & a type scale with a step
+   for every job. The defaults are cleared so nothing off-scale can sneak in. */
+@theme {
+  --text-*: initial;
+  --text-meta: 0.875rem;
+  --text-meta--line-height: 1.45;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.55;
+  --text-title: 1.3125rem;
+  --text-title--line-height: 1.3;
+  --text-heading: 1.75rem;
+  --text-heading--line-height: 1.15;
+  --text-display: 2.625rem;
+  --text-display--line-height: 1.05;
+  --text-figure: 4rem;
+  --text-figure--line-height: 1;
+
+  --radius-*: initial;
+  --radius-mark: 3px;
+  --radius-control: 14px;
+  --radius-panel: 22px;
+
+  /* no drop shadows anywhere: structure comes from space & tone */
+  --shadow-*: initial;
+  --ease-calm: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@layer base {
+  html {
+    background-color: var(--paper);
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  body {
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1, h2, h3 {
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--route);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background-color: var(--route-soft);
+    color: var(--ink);
+  }
+
+  /* every form control shares 1 look, so the jump form, filters & OCR review all read the same.
+     What you typed is bold & the label is quiet: the data is the point. */
+  input:where(:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [type="range"])),
+  select,
+  textarea {
+    width: 100%;
+    min-height: 3.25rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid transparent;
+    border-radius: var(--radius-control);
+    background-color: var(--haze);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    transition: border-color 150ms var(--ease-calm), background-color 150ms var(--ease-calm);
+  }
+
+  input:where(:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [type="range"])):hover,
+  select:hover,
+  textarea:hover {
+    background-color: var(--haze-strong);
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-color: var(--route);
+    background-color: var(--paper);
+  }
+
+  [aria-invalid="true"] {
+    border-color: var(--warn) !important;
+  }
+
+  ::placeholder {
+    color: var(--ink-faint);
+    font-weight: 400;
+    opacity: 1;
+  }
+
+  select {
+    appearance: none;
+    padding-right: 2.75rem;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
+      linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position: calc(100% - 1.45rem) 54%, calc(100% - 1.05rem) 54%;
+    background-size: 0.42rem 0.42rem;
+    background-repeat: no-repeat;
+  }
+
+  textarea {
+    min-height: 7rem;
+    font-weight: 400;
+    resize: vertical;
+  }
+
+  input[type="number"] {
+    appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  input[type="date"] {
+    appearance: none;
+  }
+}
+
+/* the one piece of motion: a freshly saved jump settles into the list, so you can see it landed */
+@keyframes settle-in {
+  from {
+    background-color: var(--route-soft);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@utility just-saved {
+  animation: settle-in 2.4s var(--ease-calm) 0.4s backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .just-saved {
+    animation: none;
+    background-color: var(--route-soft);
+  }
+}
